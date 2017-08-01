@@ -1,0 +1,108 @@
+package CompilingPrinciple.SyntaxAnalysis.ll;
+
+import java.util.*;
+
+/**
+ * @author by kissx on 17-7-31.
+ *         求 Follow 集
+ *         <p>
+ *         注意：为了快速原型，设定单个大写字母为 ‘非终结符’ 且每个 ‘终结符’ 只为其他的单个字符
+ */
+public class Follow {
+    private String[] pArray = {
+            "S->Z",
+            "Z->d",
+            "Z->XYZ",
+            "Y->c",
+            "Y->",
+            "X->Y",
+            "X->a"
+    };
+    private Map<Character, String> followMap;
+
+    private Map<Character, String> firstMap;
+    private List<Character> nullableList;
+
+    public Follow(String[] pArray, List<Character> nullableList, Map<Character, String> firstMap) {
+        this.pArray = pArray;
+        this.firstMap = firstMap;
+        this.nullableList = nullableList;
+    }
+
+    public Map<Character, String> countFollow() {
+        followMap = new HashMap<>();
+        boolean isChange = true;
+        while (isChange) {
+            isChange = false;
+            for (String p : pArray) {
+                PUtil.Node pNode = PUtil.splitP(p);
+                char leftP = pNode.leftP;
+                String followTemp = followMap.get(leftP);
+                String rightP = pNode.rightP;
+                for (int i = rightP.length() - 1; i >= 0; i--) {
+                    char c = rightP.charAt(i);
+                    if (c < 'A' || c > 'Z') {
+                        followTemp = String.valueOf(c);
+                    } else {
+                        String follow = followMap.get(c);
+                        if (follow != null) {
+                            if (followTemp != null)
+                                if (add(followTemp, c))
+                                    isChange = true;
+                        } else if (followTemp != null) {
+                            followMap.put(c, followTemp.replace("\0,", ""));
+                            isChange = true;
+                        }
+                        if (nullableList.contains(c) && followTemp != null && firstMap.get(c) != null) {
+                            followTemp = followTemp + "," + firstMap.get(c);
+                        } else
+                            followTemp = firstMap.get(c);
+                    }
+                }
+            }
+        }
+        return followMap;
+    }
+
+    private boolean add(String followTemp, char key) {
+        boolean isAdd = false;
+        String follow = followMap.get(key);
+        String[] arr1 = follow.split(",");
+        String[] arr2 = followTemp.split(",");
+        Set<String> followSet = new HashSet<>(Arrays.asList(arr1));
+        followSet.addAll(Arrays.asList(arr2));
+        StringBuilder sb = new StringBuilder();
+        for (String element : followSet) {
+            if (element.charAt(0) != '\0')
+                sb.append(element).append(',');
+        }
+        sb.delete(sb.length() - 1, sb.length());
+        if (sb.length() != follow.length()) {
+            isAdd = true;
+            followMap.put(key, sb.toString());
+        }
+        return isAdd;
+    }
+
+    public Map<Character, String> getFollowMap() {
+        return followMap;
+    }
+
+    public static void main(String[] args) {
+        String[] pArray = {
+                "Z->d",
+                "Z->XYZ",
+                "Y->c",
+                "Y->",
+                "X->Y",
+                "X->a"
+        };
+        NullAble nullAble = new NullAble(pArray);
+        List<Character> nullableList = nullAble.countNullable();
+        First first = new First(pArray, nullableList);
+        Map<Character, String> firstMap = first.countFirst();
+        Follow follow = new Follow(pArray, nullableList, firstMap);
+        Map<Character, String> followMap = follow.countFollow();
+        System.out.println(followMap);
+    }
+}
