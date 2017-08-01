@@ -3,12 +3,17 @@ package CompilingPrinciple.SyntaxAnalysis.ll;
 import java.util.ArrayList;
 import java.util.List;
 
+import static CompilingPrinciple.SyntaxAnalysis.ll.PUtil.splitP;
+
 /**
  * @author by kissx on 17-7-31.
  *         求 NullAble 集合
+ *         <p>
+ *         注意：为了快速原型，设定单个大写字母为 ‘非终结符’ 且每个 ‘终结符’ 只为其他的单个字符
  */
 public class NullAble {
     private String[] pArray = {
+            "S->Z",
             "Z->d",
             "Z->XYZ",
             "Y->c",
@@ -19,6 +24,13 @@ public class NullAble {
 
     private List<Character> nullableList;
 
+    public NullAble(String[] pArray) {
+        this.pArray = pArray;
+    }
+
+    public NullAble() {
+    }
+
     public List<Character> countNullable() {
         nullableList = new ArrayList<>();
         int num = 0;
@@ -27,7 +39,7 @@ public class NullAble {
             isStart = false;
             num = nullableList.size();
             for (String p : pArray) {
-                Node pNode = splitP(p);
+                PUtil.Node pNode = splitP(p);
                 if (pNode.rightP.equals("")) {
                     if (!nullableList.contains(pNode.leftP))
                         nullableList.add(pNode.leftP);
@@ -53,24 +65,6 @@ public class NullAble {
 
     public List<Character> getNullableList() {
         return nullableList;
-    }
-
-    class Node {
-        char leftP;
-        String rightP = "";
-
-        Node(char leftP, String rightP) {
-            this.leftP = leftP;
-            this.rightP = rightP;
-        }
-    }
-
-    private Node splitP(String p) {
-        String[] array = p.split("->");
-        if (array.length == 2)
-            return new Node(array[0].charAt(0), array[1]);
-        else
-            return new Node(array[0].charAt(0), "");
     }
 
     public static void main(String[] args) {
